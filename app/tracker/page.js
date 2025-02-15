@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, OverlayView } from "@react-google-maps/api";
 import { collection, doc, setDoc, getDocs, addDoc, deleteDoc } from "firebase/firestore";
-import { db } from "../../firebaseConfig";
+import { db } from "@/firebaseConfig";
 
 const mapContainerStyle = {
   width: "100%",
