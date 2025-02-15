@@ -6,7 +6,7 @@ import { db } from "../../firebaseConfig";
 import Link from "next/link";
 import styles from "./EntriesPage.module.css";
 
-// Status options array (same as on the tracking map page)
+// Status options array (same as on the tracker page)
 const statusOptions = [
   { label: "✅ Answered", value: "Answered" },
   { label: "📞 Call Back", value: "Call Back" },
@@ -18,8 +18,9 @@ const statusOptions = [
 function EntryCard({ entry, onDelete, onUpdate }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedEntry, setEditedEntry] = useState(entry);
+  const [newNote, setNewNote] = useState("");
 
-  // Update local edited copy if entry prop changes.
+  // Update local state when entry prop changes.
   useEffect(() => {
     setEditedEntry(entry);
   }, [entry]);
@@ -27,6 +28,23 @@ function EntryCard({ entry, onDelete, onUpdate }) {
   const handleSave = async () => {
     await onUpdate(editedEntry);
     setIsEditing(false);
+  };
+
+  // Add a note to the entry.
+  const handleAddNote = async () => {
+    if (!newNote.trim()) return;
+    const timestamp = new Date().toLocaleString();
+    const updatedNotes = [...(entry.notes || []), { text: newNote, timestamp }];
+    const updatedEntry = { ...entry, notes: updatedNotes };
+    await onUpdate(updatedEntry);
+    setNewNote("");
+  };
+
+  // Delete note handler is provided from parent.
+  const handleDeleteNote = async (noteIndex) => {
+    const updatedNotes = entry.notes.filter((_, i) => i !== noteIndex);
+    const updatedEntry = { ...entry, notes: updatedNotes };
+    await onUpdate(updatedEntry);
   };
 
   return (
@@ -138,13 +156,33 @@ function EntryCard({ entry, onDelete, onUpdate }) {
               <ul>
                 {entry.notes.map((note, index) => (
                   <li key={index}>
-                    <small>{note.timestamp}:</small> {note.text}
+                    <small>{note.timestamp}:</small> {note.text}{" "}
+                    <button
+                      onClick={() => handleDeleteNote(index)}
+                      className={styles.btnSecondary}
+                      style={{ marginLeft: "0.5rem", fontSize: "0.8rem" }}
+                    >
+                      Delete
+                    </button>
                   </li>
                 ))}
               </ul>
             ) : (
               <p>No notes available.</p>
             )}
+          </div>
+          {/* Add note section */}
+          <div style={{ marginTop: "0.5rem" }}>
+            <input
+              type="text"
+              placeholder="Add a note..."
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              style={{ width: "100%" }}
+            />
+            <button onClick={handleAddNote} className={styles.btn} style={{ marginTop: "0.5rem" }}>
+              Add Note
+            </button>
           </div>
           <div style={{ marginTop: "0.5rem" }}>
             <button
@@ -196,7 +234,7 @@ export default function EntriesPage() {
     fetchEntries();
   }, []);
 
-  // Handler to update an entry
+  // Handler to update an entry.
   const handleUpdateEntry = async (updatedEntry) => {
     try {
       const homeRef = doc(db, "homes", updatedEntry.id);
@@ -211,7 +249,7 @@ export default function EntriesPage() {
     }
   };
 
-  // Handler to delete an entry
+  // Handler to delete an entry.
   const handleDeleteEntry = async (entryId) => {
     try {
       const entryRef = doc(db, "homes", entryId);
