@@ -91,6 +91,11 @@ const TrackerPage = () => {
     });
   };
 
+  const handleSaveAndClose = async () => {
+    await handleSaveHomeInfo();
+    setSelectedHome(null); // Close the popup after saving
+  };
+
   const handleSaveHomeInfo = async () => {
     if (!selectedHome) return;
 
@@ -215,27 +220,18 @@ const TrackerPage = () => {
           <button onClick={() => setSelectedHome(null)}>✖</button>
 
           <h2>🏡 {selectedHome.address}</h2>
+          <p><strong>Logged On:</strong> {selectedHome.timestamp}</p>
 
           <label>Status:</label>
-          <select 
-            value={selectedHome.status} 
-            onChange={(e) => setSelectedHome({ ...selectedHome, status: e.target.value })}
-            style={{ width: "100%", color: "black", marginBottom: "10px" }}
-          >
-            <option value="">Select Status...</option>
+          <select value={selectedHome.status} onChange={(e) => setSelectedHome({ ...selectedHome, status: e.target.value })} style={{ width: "100%", color: "black", marginBottom: "10px" }}>
             {statusOptions.map((option) => (
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
 
-          <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Enter a note..." 
-            style={{ color: "black", width: "100%", padding: "8px", marginBottom: "10px" }} />
+          <button onClick={handleSaveAndClose} style={{ backgroundColor: "green", color: "white", width: "100%", padding: "10px" }}>💾 Save & Close</button>
 
-          <button onClick={handleAddNote}>➕ Add Note</button>
-
-          <button onClick={handleDeleteHomeEntry} style={{ backgroundColor: "red", color: "white" }}>🗑 Delete Entry</button>
-
-          <button onClick={handleSaveHomeInfo}>💾 Save & Close</button>
+          <button onClick={handleDeleteHomeEntry} style={{ backgroundColor: "red", color: "white", width: "100%", padding: "10px", marginTop: "5px" }}>🗑 Delete Entry</button>
         </div>
       )}
     </div>
