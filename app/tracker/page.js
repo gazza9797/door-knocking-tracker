@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, OverlayView } from "@react-google-maps/api";
-import { collection, doc, setDoc, getDocs, addDoc } from "firebase/firestore";
-import { db } from "@/firebaseConfig";  // ✅ Correct Firebase Import
+import { collection, doc, setDoc, getDocs, addDoc, deleteDoc } from "firebase/firestore";
+import { db } from "@/firebaseConfig";
 
 const mapContainerStyle = {
   width: "100%",
@@ -115,6 +115,19 @@ const TrackerPage = () => {
     }
   };
 
+  const handleDeleteHome = async () => {
+    if (!selectedHome || !selectedHome.id) return;
+
+    try {
+      const homeRef = doc(db, "homes", selectedHome.id);
+      await deleteDoc(homeRef);
+      setHomes((prevHomes) => prevHomes.filter((home) => home.id !== selectedHome.id));
+      setSelectedHome(null);
+    } catch (error) {
+      console.error("Error deleting home entry:", error);
+    }
+  };
+
   return (
     <div style={{ position: "relative" }}>
       <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}>
@@ -184,7 +197,10 @@ const TrackerPage = () => {
 
           <label>Notes:</label>
           <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} style={{ color: "black", width: "100%" }} />
-          <button onClick={handleSaveHomeInfo} style={{ width: "100%" }}>💾 Save Home Info</button>
+
+          {/* Buttons for Save & Close and Delete */}
+          <button onClick={handleSaveHomeInfo} style={{ width: "100%", marginTop: "10px" }}>💾 Save & Close</button>
+          <button onClick={handleDeleteHome} style={{ width: "100%", marginTop: "10px", backgroundColor: "red", color: "white" }}>🗑️ Delete</button>
         </div>
       )}
     </div>
