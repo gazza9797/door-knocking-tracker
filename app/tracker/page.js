@@ -1,9 +1,16 @@
-"use client";
+"use client";  // Required for client-side rendering in Next.js
 
 import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, OverlayView } from "@react-google-maps/api";
-import { collection, doc, setDoc, getDocs, deleteDoc, addDoc } from "firebase/firestore";
-import { db } from "../../firebaseConfig";
+import {
+  collection,
+  doc,
+  setDoc,
+  getDocs,
+  deleteDoc,
+  addDoc,
+} from "firebase/firestore";
+import { db } from "../firebaseConfig";
 
 const mapContainerStyle = {
   width: "100%",
@@ -20,7 +27,7 @@ const statusOptions = [
   { label: "📞 Call Back", value: "Call Back", emoji: "📞" },
   { label: "❌ Not Interested", value: "Not Interested", emoji: "❌" },
   { label: "🏠 Not Home", value: "Not Home", emoji: "🏠" },
-  { label: "🚧 Inaccessible", value: "Inaccessible", emoji: "🚧" }
+  { label: "🚧 Inaccessible", value: "Inaccessible", emoji: "🚧" },
 ];
 
 const DoorKnockingTracker = () => {
@@ -33,7 +40,10 @@ const DoorKnockingTracker = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setCenter({ lat: position.coords.latitude, lng: position.coords.longitude });
+          setCenter({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
         },
         () => console.warn("User denied location access. Using default location.")
       );
@@ -42,7 +52,7 @@ const DoorKnockingTracker = () => {
     const fetchHomes = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "homes"));
-        const homeData = querySnapshot.docs.map(doc => ({
+        const homeData = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
@@ -55,6 +65,7 @@ const DoorKnockingTracker = () => {
     fetchHomes();
   }, []);
 
+  // When a marker is clicked, load the existing entry or open a new entry form.
   const handleEmojiClick = (home) => {
     setSelectedHome({
       ...home,
@@ -67,6 +78,7 @@ const DoorKnockingTracker = () => {
     });
   };
 
+  // When clicking on the map background, open a new entry form.
   const handleMapClick = (e) => {
     const lat = e.latLng.lat();
     const lng = e.latLng.lng();
@@ -79,20 +91,12 @@ const DoorKnockingTracker = () => {
         } else {
           address = `(${lat.toFixed(4)}, ${lng.toFixed(4)})`;
         }
-        const existingHome = homes.find(home => home.address === address);
+        const existingHome = homes.find((home) => home.address === address);
         if (existingHome) {
-          setSelectedHome({
-            ...existingHome,
-            address: existingHome.address,
-            status: existingHome.status || "",
-            homeownerName: existingHome.homeownerName || "",
-            phoneNumber: existingHome.phoneNumber || "",
-            email: existingHome.email || "",
-            notes: Array.isArray(existingHome.notes) ? existingHome.notes : [],
-          });
+          setSelectedHome(existingHome);
         } else {
           setSelectedHome({
-            id: null,
+            id: null, // new entry
             lat,
             lng,
             address,
@@ -106,17 +110,9 @@ const DoorKnockingTracker = () => {
       });
     } else {
       const address = `(${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-      const existingHome = homes.find(home => home.address === address);
+      const existingHome = homes.find((home) => home.address === address);
       if (existingHome) {
-        setSelectedHome({
-          ...existingHome,
-          address: existingHome.address,
-          status: existingHome.status || "",
-          homeownerName: existingHome.homeownerName || "",
-          phoneNumber: existingHome.phoneNumber || "",
-          email: existingHome.email || "",
-          notes: Array.isArray(existingHome.notes) ? existingHome.notes : [],
-        });
+        setSelectedHome(existingHome);
       } else {
         setSelectedHome({
           id: null,
@@ -133,66 +129,73 @@ const DoorKnockingTracker = () => {
     }
   };
 
-  // Save Homeowner Info & Status, automatically adding a creation date for new entries.
+  // Save Homeowner Info & Status (creates new document if no id exists)
   const handleSaveHomeInfo = async () => {
     if (!selectedHome) return;
+    console.log("Attempting to save entry:", selectedHome);
     try {
       let updatedHome = { ...selectedHome };
 
-      // If this is a new entry and there's no creation date, add one.
+      // Add creation date if not set.
       if (!updatedHome.createdAt) {
         updatedHome.createdAt = new Date().toISOString();
+        console.log("Setting createdAt:", updatedHome.createdAt);
       }
 
       if (selectedHome.id) {
-        // Update existing document.
+        console.log("Updating existing entry with ID:", selectedHome.id);
         const homeRef = doc(db, "homes", selectedHome.id);
         await setDoc(homeRef, updatedHome, { merge: true });
       } else {
-        // Create a new document.
+        console.log("Creating new entry");
         const docRef = await addDoc(collection(db, "homes"), updatedHome);
         updatedHome.id = docRef.id;
+        console.log("New entry created with ID:", updatedHome.id);
       }
-
       setHomes((prevHomes) => {
-        const exists = prevHomes.some(home => home.id === updatedHome.id);
+        const exists = prevHomes.some((home) => home.id === updatedHome.id);
         return exists
-          ? prevHomes.map(home => (home.id === updatedHome.id ? updatedHome : home))
+          ? prevHomes.map((home) =>
+              home.id === updatedHome.id ? updatedHome : home
+            )
           : [...prevHomes, updatedHome];
       });
       setSelectedHome(updatedHome);
+      console.log("Entry saved successfully:", updatedHome);
     } catch (error) {
       console.error("Error saving homeowner info:", error);
     }
   };
 
+  // Save & Close: Save changes then close the form.
   const handleSaveAndClose = async () => {
     await handleSaveHomeInfo();
     setSelectedHome(null);
   };
 
+  // Save Notes.
   const handleSaveNotes = async () => {
     if (!selectedHome || !newNote.trim()) return;
     try {
       const timestamp = new Date().toLocaleString();
-      const updatedNotes = [...(selectedHome.notes || [])];
-      updatedNotes.unshift({ text: newNote, timestamp });
+      const updatedNotes = [...(selectedHome.notes || []), { text: newNote, timestamp }];
       if (selectedHome.id) {
         const homeRef = doc(db, "homes", selectedHome.id);
         await setDoc(homeRef, { ...selectedHome, notes: updatedNotes }, { merge: true });
       }
+      setSelectedHome((prev) => ({ ...prev, notes: updatedNotes }));
       setHomes((prevHomes) =>
         prevHomes.map((home) =>
           home.id === selectedHome.id ? { ...home, notes: updatedNotes } : home
         )
       );
-      setSelectedHome((prev) => ({ ...prev, notes: updatedNotes }));
       setNewNote("");
     } catch (error) {
       console.error("Error saving note:", error);
     }
   };
 
+  // Delete an individual note.
   const handleDeleteNote = async (noteIndex) => {
     if (!selectedHome) return;
     try {
@@ -201,17 +204,18 @@ const DoorKnockingTracker = () => {
         const homeRef = doc(db, "homes", selectedHome.id);
         await setDoc(homeRef, { ...selectedHome, notes: updatedNotes }, { merge: true });
       }
+      setSelectedHome((prev) => ({ ...prev, notes: updatedNotes }));
       setHomes((prevHomes) =>
         prevHomes.map((home) =>
           home.id === selectedHome.id ? { ...home, notes: updatedNotes } : home
         )
       );
-      setSelectedHome((prev) => ({ ...prev, notes: updatedNotes }));
     } catch (error) {
       console.error("Error deleting note:", error);
     }
   };
 
+  // Delete the entire home entry.
   const handleDeleteHome = async () => {
     if (!selectedHome || !selectedHome.id) return;
     try {
@@ -230,14 +234,16 @@ const DoorKnockingTracker = () => {
     <div style={{ position: "relative" }}>
       <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}>
         <GoogleMap 
-          mapContainerStyle={mapContainerStyle} 
-          zoom={12} 
+          mapContainerStyle={mapContainerStyle}
+          zoom={12}
           center={center}
           onClick={handleMapClick}
         >
           {homes.map((home, index) => {
             if (!home.lat || !home.lng) return null;
-            const statusObj = statusOptions.find(option => option.value === home.status);
+            const statusObj = statusOptions.find(
+              (option) => option.value === home.status
+            );
             const emoji = statusObj ? statusObj.emoji : "❓";
             return (
               <OverlayView
@@ -268,46 +274,54 @@ const DoorKnockingTracker = () => {
       </LoadScript>
 
       {selectedHome && (
-        <div style={{
-          position: "absolute",
-          top: "10%",
-          left: "50%",
-          transform: "translate(-50%, 0)",
-          backgroundColor: "#222",
-          color: "#fff",
-          padding: "20px",
-          borderRadius: "10px",
-          width: "90%",
-          maxWidth: "400px",
-          boxShadow: "0px 6px 15px rgba(0,0,0,0.6)",
-          zIndex: 1000,
-          textAlign: "left",
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div
+          style={{
+            position: "absolute",
+            top: "10%",
+            left: "50%",
+            transform: "translate(-50%, 0)",
+            backgroundColor: "#222",
+            color: "#fff",
+            padding: "20px",
+            borderRadius: "10px",
+            width: "90%",
+            maxWidth: "400px",
+            boxShadow: "0px 6px 15px rgba(0,0,0,0.6)",
+            zIndex: 1000,
+            textAlign: "left",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <button onClick={() => setSelectedHome(null)}>✖</button>
             <div style={{ display: "flex", gap: "5px" }}>
-              <button 
-                onClick={handleSaveAndClose} 
+              <button
+                onClick={handleSaveAndClose}
                 style={{
-                  background: "green", 
-                  color: "#fff", 
-                  border: "none", 
-                  padding: "5px 10px", 
-                  borderRadius: "5px"
+                  background: "green",
+                  color: "#fff",
+                  border: "none",
+                  padding: "5px 10px",
+                  borderRadius: "5px",
                 }}
               >
                 💾 Save & Close
               </button>
               {selectedHome.id && (
-                <button 
-                  onClick={handleDeleteHome} 
+                <button
+                  onClick={handleDeleteHome}
                   style={{
-                    background: "red", 
-                    color: "#fff", 
-                    border: "none", 
-                    padding: "3px 7px", 
+                    background: "red",
+                    color: "#fff",
+                    border: "none",
+                    padding: "3px 7px",
                     borderRadius: "5px",
-                    fontSize: "0.8rem"
+                    fontSize: "0.8rem",
                   }}
                 >
                   Delete Entry
@@ -317,77 +331,103 @@ const DoorKnockingTracker = () => {
           </div>
 
           <label>Address:</label>
-          <input 
-            value={selectedHome.address || ""} 
-            onChange={(e) => setSelectedHome({ ...selectedHome, address: e.target.value })}
+          <input
+            value={selectedHome.address || ""}
+            onChange={(e) =>
+              setSelectedHome({ ...selectedHome, address: e.target.value })
+            }
             style={{ color: "black", width: "100%", marginBottom: "10px" }}
           />
 
           <label>Status:</label>
-          <select 
+          <select
             value={selectedHome.status}
-            onChange={(e) => setSelectedHome({ ...selectedHome, status: e.target.value })}
+            onChange={(e) =>
+              setSelectedHome({ ...selectedHome, status: e.target.value })
+            }
             style={{ width: "100%", color: "black" }}
           >
             {selectedHome.status && (
               <option value={selectedHome.status} disabled>
-                {statusOptions.find(option => option.value === selectedHome.status)?.emoji || ""} {selectedHome.status} (Current)
+                {statusOptions.find(
+                  (option) => option.value === selectedHome.status
+                )?.emoji || ""}{" "}
+                {selectedHome.status} (Current)
               </option>
             )}
             <option value="">Select a status...</option>
             {statusOptions
-              .filter(option => option.value !== selectedHome.status)
+              .filter((option) => option.value !== selectedHome.status)
               .map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
-            ))}
+              ))}
           </select>
 
           <label>Homeowner Name:</label>
-          <input 
+          <input
             value={selectedHome.homeownerName}
-            onChange={(e) => setSelectedHome({ ...selectedHome, homeownerName: e.target.value })}
+            onChange={(e) =>
+              setSelectedHome({ ...selectedHome, homeownerName: e.target.value })
+            }
             style={{ color: "black", width: "100%" }}
           />
 
           <label>Phone Number:</label>
-          <input 
+          <input
             value={selectedHome.phoneNumber}
-            onChange={(e) => setSelectedHome({ ...selectedHome, phoneNumber: e.target.value })}
+            onChange={(e) =>
+              setSelectedHome({ ...selectedHome, phoneNumber: e.target.value })
+            }
             style={{ color: "black", width: "100%" }}
           />
 
           <label>Email Address:</label>
-          <input 
+          <input
             value={selectedHome.email}
-            onChange={(e) => setSelectedHome({ ...selectedHome, email: e.target.value })}
+            onChange={(e) =>
+              setSelectedHome({ ...selectedHome, email: e.target.value })
+            }
             style={{ color: "black", width: "100%" }}
           />
 
-          {/* Display Creation Date */}
-          <p>
-            <strong>Created At:</strong>{" "}
-            {selectedHome.createdAt ? new Date(selectedHome.createdAt).toLocaleString() : "Not set"}
-          </p>
-
-          <button onClick={handleSaveHomeInfo} style={{ width: "100%", marginBottom: "10px" }}>
+          <button
+            onClick={handleSaveHomeInfo}
+            style={{ width: "100%", marginBottom: "10px" }}
+          >
             💾 Save Info
           </button>
 
           <hr style={{ background: "#fff", border: "none", height: "1px" }} />
 
           <h3>Notes</h3>
-          <div style={{ maxHeight: "150px", overflowY: "auto", marginBottom: "10px" }}>
+          <div
+            style={{ maxHeight: "150px", overflowY: "auto", marginBottom: "10px" }}
+          >
             {selectedHome.notes && selectedHome.notes.length > 0 ? (
               selectedHome.notes.map((note, i) => (
-                <div key={i} style={{ marginBottom: "5px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div
+                  key={i}
+                  style={{
+                    marginBottom: "5px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
                   <div>
                     <small>{note.timestamp}:</small> {note.text}
                   </div>
-                  <button 
+                  <button
                     onClick={() => handleDeleteNote(i)}
-                    style={{ background: "red", color: "#fff", border: "none", borderRadius: "3px", padding: "2px 5px" }}
+                    style={{
+                      background: "red",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "3px",
+                      padding: "2px 5px",
+                    }}
                   >
                     Delete
                   </button>
@@ -397,7 +437,7 @@ const DoorKnockingTracker = () => {
               <p>No notes yet.</p>
             )}
           </div>
-          <textarea 
+          <textarea
             value={newNote}
             onChange={(e) => setNewNote(e.target.value)}
             placeholder="Add a new note..."
