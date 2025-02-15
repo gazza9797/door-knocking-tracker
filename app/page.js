@@ -10,9 +10,14 @@ export default function HomePage() {
         <p>
           Streamline your door knocking workflow with our all-in-one tracking solution.
         </p>
-        <Link href="/tracker">
-          <a className="btn">Go to Tracker</a>
-        </Link>
+        <div className="links">
+          <Link href="/tracker">
+            <a className="btn">Go to Tracker</a>
+          </Link>
+          <Link href="/entries">
+            <a className="btn secondary">View Entries</a>
+          </Link>
+        </div>
       </div>
       <style jsx>{`
         .container {
@@ -37,6 +42,11 @@ export default function HomePage() {
           font-size: 1.5rem;
           margin-bottom: 2rem;
         }
+        .links {
+          display: flex;
+          justify-content: center;
+          gap: 1rem;
+        }
         .btn {
           display: inline-block;
           padding: 0.75rem 1.5rem;
@@ -51,6 +61,12 @@ export default function HomePage() {
         }
         .btn:hover {
           background-color: #e73370;
+        }
+        .secondary {
+          background-color: #0070f3;
+        }
+        .secondary:hover {
+          background-color: #005bb5;
         }
       `}</style>
     </div>
