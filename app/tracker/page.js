@@ -222,14 +222,9 @@ const TrackerPage = () => {
           <h2>🏡 {selectedHome.address}</h2>
           <p><strong>Logged On:</strong> {selectedHome.timestamp}</p>
 
-          <label>Status:</label>
-          <select value={selectedHome.status} onChange={(e) => setSelectedHome({ ...selectedHome, status: e.target.value })} style={{ width: "100%", color: "black", marginBottom: "10px" }}>
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-
           <button onClick={handleSaveAndClose} style={{ backgroundColor: "green", color: "white", width: "100%", padding: "10px" }}>💾 Save & Close</button>
+
+          <button onClick={handleDeleteHomeEntry} style={{ backgroundColor: "red", color: "white", width: "100%", padding: "10px", marginTop: "5px" }}>🗑 Delete Entry</button>
         </div>
       )}
     </div>
