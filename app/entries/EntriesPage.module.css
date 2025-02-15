@@ -67,3 +67,50 @@
   list-style: none;
   padding-left: 1rem;
 }
+
+/* Button styles */
+.btn {
+  padding: 0.5rem 1rem;
+  background-color: #ff4081;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+  background-color: #e73370;
+}
+
+.btnSecondary {
+  padding: 0.5rem 1rem;
+  background-color: #0070f3;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btnSecondary:hover {
+  background-color: #005bb5;
+}
+
+input[type="text"] {
+  padding: 0.4rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 100%;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+button {
+  margin-top: 0.5rem;
+}
