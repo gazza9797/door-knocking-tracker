@@ -139,7 +139,7 @@ const DoorKnockingTracker = () => {
     try {
       let updatedHome = { ...selectedHome };
 
-      // Automatically add a creation date for new entries if it doesn't already exist.
+      // If this is a new entry and there's no creation date, add one.
       if (!updatedHome.createdAt) {
         updatedHome.createdAt = new Date().toISOString();
       }
@@ -364,6 +364,12 @@ const DoorKnockingTracker = () => {
             onChange={(e) => setSelectedHome({ ...selectedHome, email: e.target.value })}
             style={{ color: "black", width: "100%" }}
           />
+
+          {/* Display Creation Date */}
+          <p>
+            <strong>Created At:</strong>{" "}
+            {selectedHome.createdAt ? new Date(selectedHome.createdAt).toLocaleString() : "Not set"}
+          </p>
 
           <button onClick={handleSaveHomeInfo} style={{ width: "100%", marginBottom: "10px" }}>
             💾 Save Info
