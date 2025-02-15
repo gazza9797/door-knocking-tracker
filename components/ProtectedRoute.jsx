@@ -12,7 +12,6 @@ export default function ProtectedRoute({ children }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
-        // No user is signed in, redirect to login page.
         router.push("/login");
       } else {
         setLoading(false);
@@ -24,5 +23,6 @@ export default function ProtectedRoute({ children }) {
   if (loading) {
     return <p>Loading...</p>;
   }
+
   return <>{children}</>;
 }
