@@ -10,10 +10,11 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Check if any Firebase apps have already been initialized
+let app;
 if (!getApps().length) {
-  initializeApp(firebaseConfig);
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApps()[0];
 }
 
-export default firebaseConfig;
-export const app = getApps()[0];
+export { app, firebaseConfig };
