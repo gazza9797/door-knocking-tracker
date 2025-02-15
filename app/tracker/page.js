@@ -52,13 +52,13 @@ const TrackerPage = () => {
   const handleMapClick = (e) => {
     const lat = e.latLng.lat();
     const lng = e.latLng.lng();
-    const timestamp = new Date().toLocaleString(); // ✅ Add timestamp when creating a new entry
+    const timestamp = new Date().toLocaleString();
 
     if (window.google && window.google.maps) {
       const geocoder = new window.google.maps.Geocoder();
       geocoder.geocode({ location: { lat, lng } }, (results, status) => {
         let address = status === "OK" && results[0] ? results[0].formatted_address : `(${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-        
+
         const existingHome = homes.find(home => home.address === address);
         if (existingHome) {
           handleEmojiClick(existingHome);
@@ -73,7 +73,7 @@ const TrackerPage = () => {
             phoneNumber: "",
             email: "",
             notes: [],
-            timestamp, // ✅ Store timestamp
+            timestamp,
           });
         }
       });
@@ -111,7 +111,7 @@ const TrackerPage = () => {
           : [...prevHomes, updatedHome]
       );
 
-      setSelectedHome(null);
+      setSelectedHome(updatedHome);
     } catch (error) {
       console.error("Error saving homeowner info:", error);
     }
@@ -129,19 +129,18 @@ const TrackerPage = () => {
       if (selectedHome.id) {
         const homeRef = doc(db, "homes", selectedHome.id);
         await setDoc(homeRef, updatedHome, { merge: true });
-      } else {
-        const docRef = await addDoc(collection(db, "homes"), updatedHome);
-        updatedHome.id = docRef.id;
+
+        // Fetch the updated data from Firestore
+        const updatedSnapshot = await getDocs(collection(db, "homes"));
+        const updatedHomes = updatedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Find the most updated home entry and refresh state
+        const refreshedHome = updatedHomes.find(home => home.id === selectedHome.id);
+        setSelectedHome(refreshedHome);
+        setHomes(updatedHomes);
       }
 
-      setHomes((prevHomes) =>
-        prevHomes.some(home => home.id === updatedHome.id)
-          ? prevHomes.map(home => (home.id === updatedHome.id ? updatedHome : home))
-          : [...prevHomes, updatedHome]
-      );
-
-      setSelectedHome(updatedHome); // Refresh UI with updated notes
-      setNewNote(""); // Clear input field after saving
+      setNewNote("");
     } catch (error) {
       console.error("Error adding note:", error);
     }
@@ -206,14 +205,34 @@ const TrackerPage = () => {
           <button onClick={() => setSelectedHome(null)}>✖</button>
 
           <h2>🏡 {selectedHome.address}</h2>
-          <p><strong>Logged On:</strong> {selectedHome.timestamp}</p> 
+          <p><strong>Logged On:</strong> {selectedHome.timestamp}</p>
+
+          <label>Status:</label>
+          <select 
+            value={selectedHome.status} 
+            onChange={(e) => setSelectedHome({ ...selectedHome, status: e.target.value })}
+            style={{ width: "100%", color: "black", marginBottom: "10px" }}
+          >
+            <option value="">Select Status...</option>
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+
+          <h3>📜 Previous Notes:</h3>
+          <div style={{ maxHeight: "150px", overflowY: "auto", textAlign: "left" }}>
+            {selectedHome.notes.map((note, index) => (
+              <div key={index}>
+                <strong>{note.timestamp}</strong>
+                <p>{note.text}</p>
+              </div>
+            ))}
+          </div>
 
           <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Enter a note..." 
             style={{ color: "black", width: "100%", padding: "8px", marginBottom: "10px" }} />
 
           <button onClick={handleAddNote} style={{ width: "100%", backgroundColor: "blue", color: "white", padding: "8px" }}>➕ Add Note</button>
-
-          <button onClick={handleSaveHomeInfo} style={{ width: "100%", backgroundColor: "green", color: "white", padding: "12px" }}>💾 Save & Close</button>
         </div>
       )}
     </div>
