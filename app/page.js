@@ -2,8 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, OverlayView } from "@react-google-maps/api";
-import { collection, doc, setDoc, getDocs, deleteDoc, addDoc } from "firebase/firestore";
+import { collection, doc, setDoc, getDocs, deleteDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+
+// Helper function to generate a sanitized document ID from the address.
+const getDocIdFromAddress = (address) => {
+  return address.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+};
 
 const mapContainerStyle = {
   width: "100%",
@@ -134,7 +139,8 @@ const DoorKnockingTracker = () => {
     }
   };
 
-  // Save Homeowner Info & Status (creates new document if no id exists)
+  // Save Homeowner Info & Status.
+  // If it's a new entry (selectedHome.id is null), use the sanitized address as the document ID.
   const handleSaveHomeInfo = async () => {
     if (!selectedHome) return;
     try {
@@ -144,9 +150,10 @@ const DoorKnockingTracker = () => {
         const homeRef = doc(db, "homes", selectedHome.id);
         await setDoc(homeRef, selectedHome, { merge: true });
       } else {
-        // Create a new document
-        const docRef = await addDoc(collection(db, "homes"), selectedHome);
-        updatedHome.id = docRef.id;
+        // Use the address as the document ID.
+        const docId = getDocIdFromAddress(selectedHome.address);
+        await setDoc(doc(db, "homes", docId), selectedHome, { merge: true });
+        updatedHome.id = docId;
       }
       // Update local state
       setHomes((prevHomes) => {
