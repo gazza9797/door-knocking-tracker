@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
+import Link from 'next/link';
+import MyComponent from "../components/MyComponent";
 
 export default function HomePage() {
   return (
@@ -19,6 +19,8 @@ export default function HomePage() {
             <a className="btn secondary">View Entries</a>
           </Link>
         </div>
+        {/* Insert the component here */}
+        <MyComponent showCount={true} />
       </div>
       <style jsx>{`
         .container {
@@ -47,6 +49,7 @@ export default function HomePage() {
           display: flex;
           justify-content: center;
           gap: 1rem;
+          margin-bottom: 2rem;
         }
         .btn {
           display: inline-block;
