@@ -222,6 +222,8 @@ const TrackerPage = () => {
           <h2>🏡 {selectedHome.address}</h2>
           <p><strong>Logged On:</strong> {selectedHome.timestamp}</p>
 
+          <button onClick={handleAddNote} style={{ backgroundColor: "blue", color: "white", width: "100%", padding: "10px" }}>➕ Add Note</button>
+
           <button onClick={handleSaveAndClose} style={{ backgroundColor: "green", color: "white", width: "100%", padding: "10px" }}>💾 Save & Close</button>
 
           <button onClick={handleDeleteHomeEntry} style={{ backgroundColor: "red", color: "white", width: "100%", padding: "10px", marginTop: "5px" }}>🗑 Delete Entry</button>
