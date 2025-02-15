@@ -1,4 +1,4 @@
-/// app/page.js (if you're using Next.js 13's app directory)
+"use client";
 
 import Link from 'next/link';
 
