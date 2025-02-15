@@ -52,6 +52,7 @@ const TrackerPage = () => {
   const handleMapClick = (e) => {
     const lat = e.latLng.lat();
     const lng = e.latLng.lng();
+    const timestamp = new Date().toLocaleString(); // ✅ Add timestamp when creating a new entry
 
     if (window.google && window.google.maps) {
       const geocoder = new window.google.maps.Geocoder();
@@ -72,6 +73,7 @@ const TrackerPage = () => {
             phoneNumber: "",
             email: "",
             notes: [],
+            timestamp, // ✅ Store timestamp
           });
         }
       });
@@ -125,27 +127,6 @@ const TrackerPage = () => {
       setSelectedHome(null);
     } catch (error) {
       console.error("Error deleting home entry:", error);
-    }
-  };
-
-  const handleDeleteNote = async (index) => {
-    if (!selectedHome) return;
-
-    try {
-      const updatedNotes = [...selectedHome.notes];
-      updatedNotes.splice(index, 1);
-
-      const homeRef = doc(db, "homes", selectedHome.id);
-      await setDoc(homeRef, { ...selectedHome, notes: updatedNotes }, { merge: true });
-
-      setSelectedHome((prev) => ({ ...prev, notes: updatedNotes }));
-      setHomes((prevHomes) =>
-        prevHomes.map((home) =>
-          home.id === selectedHome.id ? { ...home, notes: updatedNotes } : home
-        )
-      );
-    } catch (error) {
-      console.error("Error deleting note:", error);
     }
   };
 
@@ -208,18 +189,10 @@ const TrackerPage = () => {
           <button onClick={() => setSelectedHome(null)}>✖</button>
 
           <h2>🏡 {selectedHome.address}</h2>
-
-          <h3>Notes:</h3>
-          <ul>
-            {selectedHome.notes.map((note, index) => (
-              <li key={index} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span>{note.text}</span>
-                <button onClick={() => handleDeleteNote(index)} style={{ color: "red", fontSize: "12px" }}>🗑️</button>
-              </li>
-            ))}
-          </ul>
+          <p><strong>Logged On:</strong> {selectedHome.timestamp}</p> {/* ✅ Display Timestamp */}
 
           <button onClick={handleSaveHomeInfo} style={{ width: "100%", backgroundColor: "green", color: "white", padding: "12px" }}>💾 Save & Close</button>
+          <button onClick={handleDeleteHome} style={{ marginTop: "10px", backgroundColor: "red", color: "white", fontSize: "12px", padding: "5px 10px", borderRadius: "5px" }}>🗑️ Delete</button>
         </div>
       )}
     </div>
