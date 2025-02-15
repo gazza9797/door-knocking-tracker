@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, OverlayView } from "@react-google-maps/api";
-import { collection, doc, setDoc, getDocs, addDoc } from "firebase/firestore";
+import { collection, doc, setDoc, getDocs, addDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 
 const mapContainerStyle = {
@@ -28,7 +28,7 @@ const TrackerPage = () => {
   const [selectedHome, setSelectedHome] = useState(null);
   const [homes, setHomes] = useState([]);
   const [center, setCenter] = useState(defaultCenter);
-  const [newNote, setNewNote] = useState(""); // ✅ This is now used properly
+  const [newNote, setNewNote] = useState("");
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -124,17 +124,18 @@ const TrackerPage = () => {
       const timestamp = new Date().toLocaleString();
       const updatedNotes = [...(selectedHome.notes || []), { text: newNote, timestamp }];
 
-      const homeRef = doc(db, "homes", selectedHome.id);
-      await setDoc(homeRef, { ...selectedHome, notes: updatedNotes }, { merge: true });
+      if (selectedHome.id) {
+        const homeRef = doc(db, "homes", selectedHome.id);
+        await setDoc(homeRef, { ...selectedHome, notes: updatedNotes }, { merge: true });
 
-      setSelectedHome((prev) => ({ ...prev, notes: updatedNotes }));
-      setHomes((prevHomes) =>
-        prevHomes.map((home) =>
-          home.id === selectedHome.id ? { ...home, notes: updatedNotes } : home
-        )
-      );
-
-      setNewNote("");
+        setSelectedHome((prev) => ({ ...prev, notes: updatedNotes }));
+        setHomes((prevHomes) =>
+          prevHomes.map((home) =>
+            home.id === selectedHome.id ? { ...home, notes: updatedNotes } : home
+          )
+        );
+      }
+      setNewNote(""); // Clear input after saving
     } catch (error) {
       console.error("Error adding note:", error);
     }
@@ -199,15 +200,24 @@ const TrackerPage = () => {
           <button onClick={() => setSelectedHome(null)}>✖</button>
 
           <h2>🏡 {selectedHome.address}</h2>
-          <p><strong>Logged On:</strong> {selectedHome.timestamp}</p> {/* ✅ Display Timestamp */}
+          <p><strong>Logged On:</strong> {selectedHome.timestamp}</p> 
 
-          <textarea
-            value={newNote}
-            onChange={(e) => setNewNote(e.target.value)}
-            placeholder="Enter a note..."
-            style={{ color: "black", width: "100%", marginBottom: "10px" }}
-          />
-          <button onClick={handleAddNote} style={{ width: "100%", marginBottom: "10px", backgroundColor: "blue", color: "white", padding: "8px" }}>➕ Add Note</button>
+          <label>Status:</label>
+          <select 
+            value={selectedHome.status} 
+            onChange={(e) => setSelectedHome({ ...selectedHome, status: e.target.value })}
+            style={{ width: "100%", color: "black", marginBottom: "10px" }}
+          >
+            <option value="">Select Status...</option>
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+
+          <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Enter a note..." 
+            style={{ color: "black", width: "100%", padding: "8px", marginBottom: "10px" }} />
+
+          <button onClick={handleAddNote} style={{ width: "100%", backgroundColor: "blue", color: "white", padding: "8px" }}>➕ Add Note</button>
 
           <button onClick={handleSaveHomeInfo} style={{ width: "100%", backgroundColor: "green", color: "white", padding: "12px" }}>💾 Save & Close</button>
         </div>
