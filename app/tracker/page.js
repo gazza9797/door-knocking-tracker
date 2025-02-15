@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, OverlayView } from "@react-google-maps/api";
-import { collection, doc, setDoc, getDocs, addDoc } from "firebase/firestore";
+import { collection, doc, setDoc, getDocs, addDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 
 const mapContainerStyle = {
@@ -111,9 +111,21 @@ const TrackerPage = () => {
           : [...prevHomes, updatedHome]
       );
 
-      setSelectedHome(null);
+      setSelectedHome(updatedHome);
     } catch (error) {
       console.error("Error saving homeowner info:", error);
+    }
+  };
+
+  const handleDeleteHomeEntry = async () => {
+    if (!selectedHome?.id) return;
+
+    try {
+      await deleteDoc(doc(db, "homes", selectedHome.id));
+      setHomes(homes.filter(home => home.id !== selectedHome.id));
+      setSelectedHome(null);
+    } catch (error) {
+      console.error("Error deleting home entry:", error);
     }
   };
 
@@ -129,39 +141,18 @@ const TrackerPage = () => {
       if (selectedHome.id) {
         const homeRef = doc(db, "homes", selectedHome.id);
         await setDoc(homeRef, updatedHome, { merge: true });
-
-        const updatedSnapshot = await getDocs(collection(db, "homes"));
-        const updatedHomes = updatedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const refreshedHome = updatedHomes.find(home => home.id === selectedHome.id);
-        setSelectedHome(refreshedHome);
-        setHomes(updatedHomes);
       }
 
+      setHomes((prevHomes) =>
+        prevHomes.map((home) =>
+          home.id === updatedHome.id ? updatedHome : home
+        )
+      );
+
+      setSelectedHome(updatedHome);
       setNewNote("");
     } catch (error) {
       console.error("Error adding note:", error);
-    }
-  };
-
-  const handleDeleteNote = async (index) => {
-    if (!selectedHome) return;
-
-    try {
-      const updatedNotes = selectedHome.notes.filter((_, i) => i !== index);
-      const updatedHome = { ...selectedHome, notes: updatedNotes };
-
-      if (selectedHome.id) {
-        const homeRef = doc(db, "homes", selectedHome.id);
-        await setDoc(homeRef, updatedHome, { merge: true });
-
-        const updatedSnapshot = await getDocs(collection(db, "homes"));
-        const updatedHomes = updatedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const refreshedHome = updatedHomes.find(home => home.id === selectedHome.id);
-        setSelectedHome(refreshedHome);
-        setHomes(updatedHomes);
-      }
-    } catch (error) {
-      console.error("Error deleting note:", error);
     }
   };
 
@@ -225,17 +216,24 @@ const TrackerPage = () => {
 
           <h2>🏡 {selectedHome.address}</h2>
 
+          <label>Status:</label>
+          <select 
+            value={selectedHome.status} 
+            onChange={(e) => setSelectedHome({ ...selectedHome, status: e.target.value })}
+            style={{ width: "100%", color: "black", marginBottom: "10px" }}
+          >
+            <option value="">Select Status...</option>
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+
           <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Enter a note..." 
             style={{ color: "black", width: "100%", padding: "8px", marginBottom: "10px" }} />
 
           <button onClick={handleAddNote}>➕ Add Note</button>
 
-          {selectedHome.notes.map((note, index) => (
-            <div key={index}>
-              <p>{note.timestamp} - {note.text}</p>
-              <button onClick={() => handleDeleteNote(index)}>🗑 Delete</button>
-            </div>
-          ))}
+          <button onClick={handleDeleteHomeEntry} style={{ backgroundColor: "red", color: "white" }}>🗑 Delete Entry</button>
 
           <button onClick={handleSaveHomeInfo}>💾 Save & Close</button>
         </div>
