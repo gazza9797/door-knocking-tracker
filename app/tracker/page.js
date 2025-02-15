@@ -1,9 +1,9 @@
-"use client";  // Required for client-side rendering in Next.js
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, OverlayView } from "@react-google-maps/api";
 import { collection, doc, setDoc, getDocs, deleteDoc, addDoc } from "firebase/firestore";
-import { db } from "../firebaseConfig";
+import { db } from "../../firebaseConfig"; // Adjusted path
 
 const mapContainerStyle = {
   width: "100%",
@@ -15,7 +15,6 @@ const defaultCenter = {
   lng: -79.3832,
 };
 
-// Define statuses and corresponding emojis
 const statusOptions = [
   { label: "✅ Answered", value: "Answered", emoji: "✅" },
   { label: "📞 Call Back", value: "Call Back", emoji: "📞" },
@@ -52,7 +51,6 @@ const DoorKnockingTracker = () => {
     fetchHomes();
   }, []);
 
-  // When a marker is clicked, load the existing entry.
   const handleEmojiClick = (home) => {
     setSelectedHome({
       ...home,
@@ -65,7 +63,6 @@ const DoorKnockingTracker = () => {
     });
   };
 
-  // When clicking on the map background, create a new entry form if one doesn't already exist for that address.
   const handleMapClick = (e) => {
     const lat = e.latLng.lat();
     const lng = e.latLng.lng();
@@ -78,7 +75,6 @@ const DoorKnockingTracker = () => {
         } else {
           address = `(${lat.toFixed(4)}, ${lng.toFixed(4)})`;
         }
-        // Check if an entry with the same address already exists
         const existingHome = homes.find(home => home.address === address);
         if (existingHome) {
           setSelectedHome({
@@ -92,7 +88,7 @@ const DoorKnockingTracker = () => {
           });
         } else {
           setSelectedHome({
-            id: null, // new entry
+            id: null,
             lat,
             lng,
             address,
@@ -105,7 +101,6 @@ const DoorKnockingTracker = () => {
         }
       });
     } else {
-      // Fallback if geocoder isn't available
       const address = `(${lat.toFixed(4)}, ${lng.toFixed(4)})`;
       const existingHome = homes.find(home => home.address === address);
       if (existingHome) {
@@ -134,21 +129,17 @@ const DoorKnockingTracker = () => {
     }
   };
 
-  // Save Homeowner Info & Status (creates new document if no id exists)
   const handleSaveHomeInfo = async () => {
     if (!selectedHome) return;
     try {
       let updatedHome = { ...selectedHome };
       if (selectedHome.id) {
-        // Update existing document
         const homeRef = doc(db, "homes", selectedHome.id);
         await setDoc(homeRef, selectedHome, { merge: true });
       } else {
-        // Create a new document
         const docRef = await addDoc(collection(db, "homes"), selectedHome);
         updatedHome.id = docRef.id;
       }
-      // Update local state
       setHomes((prevHomes) => {
         const exists = prevHomes.some(home => home.id === updatedHome.id);
         return exists
@@ -161,13 +152,11 @@ const DoorKnockingTracker = () => {
     }
   };
 
-  // Save & close: Save changes then close the popup.
   const handleSaveAndClose = async () => {
     await handleSaveHomeInfo();
     setSelectedHome(null);
   };
 
-  // Save Notes
   const handleSaveNotes = async () => {
     if (!selectedHome || !newNote.trim()) return;
     try {
@@ -190,7 +179,6 @@ const DoorKnockingTracker = () => {
     }
   };
 
-  // Delete an individual note
   const handleDeleteNote = async (noteIndex) => {
     if (!selectedHome) return;
     try {
@@ -210,7 +198,6 @@ const DoorKnockingTracker = () => {
     }
   };
 
-  // Delete the entire home entry
   const handleDeleteHome = async () => {
     if (!selectedHome || !selectedHome.id) return;
     try {
