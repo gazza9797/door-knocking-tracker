@@ -79,6 +79,7 @@
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  text-decoration: none;
 }
 
 .btn:hover {
@@ -93,13 +94,14 @@
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  text-decoration: none;
 }
 
 .btnSecondary:hover {
   background-color: #005bb5;
 }
 
-/* Global styles for input, label, and button elements */
+/* Global styles for common elements */
 :global(input[type="text"]) {
   padding: 0.4rem;
   margin-bottom: 0.5rem;
