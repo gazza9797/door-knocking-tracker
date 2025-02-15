@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
-import { db } from "../../firebaseConfig";
+import { db } from "@/firebaseConfig";
 import Link from "next/link";
 import styles from "./EntriesPage.module.css";
 
