@@ -1,21 +1,21 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { collection, getDocs, doc, setDoc } from "firebase/firestore";
+import { collection, getDocs, doc, deleteDoc, setDoc } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
+import Link from "next/link";
 import styles from "./EntriesPage.module.css";
 
-function EntryCard({ entry, onUpdate }) {
+function EntryCard({ entry, onDelete, onUpdate }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedEntry, setEditedEntry] = useState(entry);
 
-  // When the entry prop changes, update the local edited copy.
+  // Update local state when entry prop changes.
   useEffect(() => {
     setEditedEntry(entry);
   }, [entry]);
 
   const handleSave = async () => {
-    // Call onUpdate with the updated entry.
     await onUpdate(editedEntry);
     setIsEditing(false);
   };
@@ -131,13 +131,25 @@ function EntryCard({ entry, onUpdate }) {
               <p>No notes available.</p>
             )}
           </div>
-          <button
-            onClick={() => setIsEditing(true)}
-            className={styles.btn}
-            style={{ marginTop: "0.5rem" }}
-          >
-            Edit
-          </button>
+          <div style={{ marginTop: "0.5rem" }}>
+            <button
+              onClick={() => setIsEditing(true)}
+              className={styles.btn}
+              style={{ marginRight: "0.5rem" }}
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => onDelete(entry.id)}
+              className={styles.btnSecondary}
+              style={{ marginRight: "0.5rem" }}
+            >
+              Delete
+            </button>
+            <Link href={`/tracker?lat=${entry.lat}&lng=${entry.lng}`}>
+              <a className={styles.btn}>Map Address</a>
+            </Link>
+          </div>
         </div>
       )}
     </li>
@@ -169,7 +181,7 @@ export default function EntriesPage() {
     fetchEntries();
   }, []);
 
-  // Update handler to update a single entry in Firestore and local state.
+  // Handler to update an entry from editing
   const handleUpdateEntry = async (updatedEntry) => {
     try {
       const homeRef = doc(db, "homes", updatedEntry.id);
@@ -184,23 +196,30 @@ export default function EntriesPage() {
     }
   };
 
-  // Filter entries based on search term.
+  // Handler to delete an entry.
+  const handleDeleteEntry = async (entryId) => {
+    try {
+      const entryRef = doc(db, "homes", entryId);
+      await deleteDoc(entryRef);
+      setEntries((prev) => prev.filter((entry) => entry.id !== entryId));
+    } catch (error) {
+      console.error("Error deleting entry:", error);
+    }
+  };
+
   const filteredEntries = useMemo(() => {
     const term = searchTerm.toLowerCase();
     return entries.filter((entry) => {
       return (
-        (entry.address &&
-          entry.address.toLowerCase().includes(term)) ||
-        (entry.homeownerName &&
-          entry.homeownerName.toLowerCase().includes(term))
+        (entry.address && entry.address.toLowerCase().includes(term)) ||
+        (entry.homeownerName && entry.homeownerName.toLowerCase().includes(term))
       );
     });
   }, [entries, searchTerm]);
 
-  // Sort the filtered entries.
   const sortedEntries = useMemo(() => {
-    const entriesCopy = [...filteredEntries];
-    return entriesCopy.sort((a, b) => {
+    const copy = [...filteredEntries];
+    return copy.sort((a, b) => {
       if (sortOption === "address") {
         return a.address?.localeCompare(b.address) || 0;
       } else if (sortOption === "status") {
@@ -244,6 +263,7 @@ export default function EntriesPage() {
               <EntryCard
                 key={entry.id}
                 entry={entry}
+                onDelete={handleDeleteEntry}
                 onUpdate={handleUpdateEntry}
               />
             ))}
