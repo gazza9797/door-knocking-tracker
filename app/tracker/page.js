@@ -111,7 +111,7 @@ const TrackerPage = () => {
           : [...prevHomes, updatedHome]
       );
 
-      setSelectedHome(updatedHome);
+      setSelectedHome(null);
     } catch (error) {
       console.error("Error saving homeowner info:", error);
     }
@@ -219,18 +219,10 @@ const TrackerPage = () => {
             ))}
           </select>
 
-          <h3>📜 Previous Notes:</h3>
-          <div style={{ maxHeight: "150px", overflowY: "auto", textAlign: "left" }}>
-            {selectedHome.notes.map((note, index) => (
-              <div key={index}>
-                <strong>{note.timestamp}</strong>
-                <p>{note.text}</p>
-              </div>
-            ))}
-          </div>
-
-          <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Enter a note..." 
-            style={{ color: "black", width: "100%", padding: "8px", marginBottom: "10px" }} />
+          <button onClick={handleSaveHomeInfo} 
+            style={{ width: "100%", backgroundColor: "green", color: "white", padding: "12px" }}>
+            💾 Save & Close
+          </button>
 
           <button onClick={handleAddNote} style={{ width: "100%", backgroundColor: "blue", color: "white", padding: "8px" }}>➕ Add Note</button>
         </div>
