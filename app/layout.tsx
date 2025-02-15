@@ -1,5 +1,4 @@
-"use client";
-
+// app/layout.tsx
 import "./globals.css";
 import ProtectedRoute from "../components/ProtectedRoute";
 
