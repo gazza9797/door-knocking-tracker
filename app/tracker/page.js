@@ -1,21 +1,19 @@
 "use client";
 
-import Link from 'next/link';
-import MyComponent from "../components/MyComponent";
+import Link from "next/link";
+import MyComponent from "@/components/MyComponent"; // ✅ Corrected Import Path
 
-export default function HomePage() {
+export default function TrackerPage() {
   return (
     <div className="container">
       <div className="hero">
-        <h1>Welcome to Door Knocking Tracker</h1>
-        <p>
-          Streamline your door knocking workflow with our all-in-one tracking solution.
-        </p>
+        <h1>Door Knocking Tracker</h1>
+        <p>Track your door knocking progress and manage your leads efficiently.</p>
         <div className="links">
-          <Link href="/tracker" className="btn">Go to Tracker</Link>
-          <Link href="/entries" className="btn secondary">View Entries</Link>
+          <Link href="/" className="btn">🏡 Home</Link>
+          <Link href="/entries" className="btn secondary">📋 View Entries</Link>
         </div>
-        {/* Insert the component here */}
+        {/* MyComponent inserted */}
         <MyComponent showCount={true} />
       </div>
 
@@ -34,7 +32,7 @@ export default function HomePage() {
           max-width: 600px;
         }
         .hero h1 {
-          font-size: 3rem;
+          font-size: 2.5rem;
           margin-bottom: 1rem;
           font-weight: bold;
         }
