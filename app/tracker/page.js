@@ -88,19 +88,7 @@ const TrackerPage = () => {
     });
   };
 
-  const handleSaveHomeInfo = async () => {
-    if (!selectedHome) return;
-
-    try {
-      let updatedHome = { ...selectedHome };
-      if (selectedHome.id) {
-        const homeRef = doc(db, "homes", selectedHome.id);
-        await setDoc(homeRef, selectedHome, { merge: true });
-      } else {
-        const docRef = await addDoc(collection(db, "homes"), selectedHome);
-        updatedHome.id = docRef.id;
-      }
-
+ 
       setHomes((prevHomes) =>
         prevHomes.some(home => home.id === updatedHome.id)
           ? prevHomes.map(home => (home.id === updatedHome.id ? updatedHome : home))
