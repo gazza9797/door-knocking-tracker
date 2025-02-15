@@ -122,18 +122,6 @@ const TrackerPage = () => {
     }
   };
 
-  const handleDeleteHomeEntry = async () => {
-    if (!selectedHome?.id) return;
-
-    try {
-      await deleteDoc(doc(db, "homes", selectedHome.id));
-      setHomes(homes.filter(home => home.id !== selectedHome.id));
-      setSelectedHome(null);
-    } catch (error) {
-      console.error("Error deleting home entry:", error);
-    }
-  };
-
   const handleAddNote = async () => {
     if (!selectedHome || !newNote.trim()) return;
 
@@ -222,11 +210,29 @@ const TrackerPage = () => {
           <h2>🏡 {selectedHome.address}</h2>
           <p><strong>Logged On:</strong> {selectedHome.timestamp}</p>
 
+          {/* ✅ Status Dropdown */}
+          <label>Status:</label>
+          <select 
+            value={selectedHome.status} 
+            onChange={(e) => setSelectedHome({ ...selectedHome, status: e.target.value })}
+            style={{ width: "100%", color: "black", marginBottom: "10px" }}
+          >
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+
+          {/* ✅ Notes Input */}
+          <textarea 
+            value={newNote} 
+            onChange={(e) => setNewNote(e.target.value)} 
+            placeholder="Enter a note..." 
+            style={{ width: "100%", padding: "8px", marginBottom: "10px", color: "black" }} 
+          />
+
           <button onClick={handleAddNote} style={{ backgroundColor: "blue", color: "white", width: "100%", padding: "10px" }}>➕ Add Note</button>
 
           <button onClick={handleSaveAndClose} style={{ backgroundColor: "green", color: "white", width: "100%", padding: "10px" }}>💾 Save & Close</button>
-
-          <button onClick={handleDeleteHomeEntry} style={{ backgroundColor: "red", color: "white", width: "100%", padding: "10px", marginTop: "5px" }}>🗑 Delete Entry</button>
         </div>
       )}
     </div>
