@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, OverlayView } from "@react-google-maps/api";
 import { collection, doc, setDoc, getDocs, deleteDoc, addDoc } from "firebase/firestore";
-import { db } from "../../firebaseConfig"; // Adjusted path
+import { db } from "../../firebaseConfig";
 
 const mapContainerStyle = {
   width: "100%",
@@ -40,12 +40,16 @@ const DoorKnockingTracker = () => {
     }
 
     const fetchHomes = async () => {
-      const querySnapshot = await getDocs(collection(db, "homes"));
-      const homeData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setHomes(homeData);
+      try {
+        const querySnapshot = await getDocs(collection(db, "homes"));
+        const homeData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setHomes(homeData);
+      } catch (error) {
+        console.error("Error fetching entries:", error);
+      }
     };
 
     fetchHomes();
@@ -129,17 +133,27 @@ const DoorKnockingTracker = () => {
     }
   };
 
+  // Save Homeowner Info & Status, automatically adding a creation date for new entries.
   const handleSaveHomeInfo = async () => {
     if (!selectedHome) return;
     try {
       let updatedHome = { ...selectedHome };
+
+      // Automatically add a creation date for new entries if it doesn't already exist.
+      if (!updatedHome.createdAt) {
+        updatedHome.createdAt = new Date().toISOString();
+      }
+
       if (selectedHome.id) {
+        // Update existing document.
         const homeRef = doc(db, "homes", selectedHome.id);
-        await setDoc(homeRef, selectedHome, { merge: true });
+        await setDoc(homeRef, updatedHome, { merge: true });
       } else {
-        const docRef = await addDoc(collection(db, "homes"), selectedHome);
+        // Create a new document.
+        const docRef = await addDoc(collection(db, "homes"), updatedHome);
         updatedHome.id = docRef.id;
       }
+
       setHomes((prevHomes) => {
         const exists = prevHomes.some(home => home.id === updatedHome.id);
         return exists
