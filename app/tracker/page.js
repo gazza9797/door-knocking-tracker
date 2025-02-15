@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, OverlayView } from "@react-google-maps/api";
-import { collection, doc, setDoc, getDocs, addDoc } from "firebase/firestore"; // 🔥 Removed deleteDoc
+import { collection, doc, setDoc, getDocs, addDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 
 const mapContainerStyle = {
@@ -49,6 +49,118 @@ const TrackerPage = () => {
     fetchHomes();
   }, []);
 
+  const handleMapClick = (e) => {
+    const lat = e.latLng.lat();
+    const lng = e.latLng.lng();
+    const timestamp = new Date().toLocaleString();
+
+    if (window.google && window.google.maps) {
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+        let address = status === "OK" && results[0] ? results[0].formatted_address : `(${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+
+        const existingHome = homes.find(home => home.address === address);
+        if (existingHome) {
+          handleEmojiClick(existingHome);
+        } else {
+          setSelectedHome({
+            id: null,
+            lat,
+            lng,
+            address,
+            status: "",
+            homeownerName: "",
+            phoneNumber: "",
+            email: "",
+            notes: [],
+            timestamp,
+          });
+        }
+      });
+    }
+  };
+
+  const handleEmojiClick = (home) => {
+    setSelectedHome({
+      ...home,
+      notes: Array.isArray(home.notes) ? home.notes : [],
+      status: home.status || "",
+      homeownerName: home.homeownerName || "",
+      phoneNumber: home.phoneNumber || "",
+      email: home.email || "",
+    });
+  };
+
+  const handleSaveAndClose = async () => {
+    await handleSaveHomeInfo();
+    setSelectedHome(null); // Close the popup after saving
+  };
+
+  const handleSaveHomeInfo = async () => {
+    if (!selectedHome) return;
+
+    try {
+      let updatedHome = { ...selectedHome };
+
+      if (selectedHome.id) {
+        const homeRef = doc(db, "homes", selectedHome.id);
+        await setDoc(homeRef, updatedHome, { merge: true });
+      } else {
+        const docRef = await addDoc(collection(db, "homes"), updatedHome);
+        updatedHome.id = docRef.id;
+      }
+
+      setHomes((prevHomes) =>
+        prevHomes.some(home => home.id === updatedHome.id)
+          ? prevHomes.map(home => (home.id === updatedHome.id ? updatedHome : home))
+          : [...prevHomes, updatedHome]
+      );
+
+      setSelectedHome(updatedHome);
+    } catch (error) {
+      console.error("Error saving homeowner info:", error);
+    }
+  };
+
+  const handleDeleteHomeEntry = async () => {
+    if (!selectedHome?.id) return;
+
+    try {
+      await deleteDoc(doc(db, "homes", selectedHome.id));
+      setHomes((prevHomes) => prevHomes.filter(home => home.id !== selectedHome.id));
+      setSelectedHome(null);
+    } catch (error) {
+      console.error("Error deleting home entry:", error);
+    }
+  };
+
+  const handleAddNote = async () => {
+    if (!selectedHome || !newNote.trim()) return;
+
+    try {
+      const timestamp = new Date().toLocaleString();
+      const updatedNotes = [...(selectedHome.notes || []), { text: newNote, timestamp }];
+
+      let updatedHome = { ...selectedHome, notes: updatedNotes };
+
+      if (selectedHome.id) {
+        const homeRef = doc(db, "homes", selectedHome.id);
+        await setDoc(homeRef, updatedHome, { merge: true });
+      }
+
+      setHomes((prevHomes) =>
+        prevHomes.map((home) =>
+          home.id === updatedHome.id ? updatedHome : home
+        )
+      );
+
+      setSelectedHome(updatedHome);
+      setNewNote("");
+    } catch (error) {
+      console.error("Error adding note:", error);
+    }
+  };
+
   return (
     <div style={{ position: "relative" }}>
       <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}>
@@ -56,6 +168,7 @@ const TrackerPage = () => {
           mapContainerStyle={mapContainerStyle} 
           zoom={12} 
           center={center}
+          onClick={handleMapClick}
         >
           {homes.map((home, index) => {
             if (!home.lat || !home.lng) return null;
@@ -105,6 +218,12 @@ const TrackerPage = () => {
 
           <h2>🏡 {selectedHome.address}</h2>
           <p><strong>Logged On:</strong> {selectedHome.timestamp}</p>
+
+          <button onClick={handleAddNote} style={{ backgroundColor: "blue", color: "white", width: "100%", padding: "10px" }}>➕ Add Note</button>
+
+          <button onClick={handleSaveAndClose} style={{ backgroundColor: "green", color: "white", width: "100%", padding: "10px" }}>💾 Save & Close</button>
+
+          <button onClick={handleDeleteHomeEntry} style={{ backgroundColor: "red", color: "white", width: "100%", padding: "10px", marginTop: "5px" }}>🗑 Delete Entry</button>
         </div>
       )}
     </div>
