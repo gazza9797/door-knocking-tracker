@@ -100,22 +100,3 @@
 .btnSecondary:hover {
   background-color: #005bb5;
 }
-
-/* Global styles for common elements */
-:global(input[type="text"]) {
-  padding: 0.4rem;
-  margin-bottom: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  width: 100%;
-}
-
-:global(label) {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: bold;
-}
-
-:global(button) {
-  margin-top: 0.5rem;
-}
