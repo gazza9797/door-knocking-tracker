@@ -130,11 +130,8 @@ const TrackerPage = () => {
         const homeRef = doc(db, "homes", selectedHome.id);
         await setDoc(homeRef, updatedHome, { merge: true });
 
-        // Fetch the updated data from Firestore
         const updatedSnapshot = await getDocs(collection(db, "homes"));
         const updatedHomes = updatedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        // Find the most updated home entry and refresh state
         const refreshedHome = updatedHomes.find(home => home.id === selectedHome.id);
         setSelectedHome(refreshedHome);
         setHomes(updatedHomes);
@@ -143,6 +140,28 @@ const TrackerPage = () => {
       setNewNote("");
     } catch (error) {
       console.error("Error adding note:", error);
+    }
+  };
+
+  const handleDeleteNote = async (index) => {
+    if (!selectedHome) return;
+
+    try {
+      const updatedNotes = selectedHome.notes.filter((_, i) => i !== index);
+      const updatedHome = { ...selectedHome, notes: updatedNotes };
+
+      if (selectedHome.id) {
+        const homeRef = doc(db, "homes", selectedHome.id);
+        await setDoc(homeRef, updatedHome, { merge: true });
+
+        const updatedSnapshot = await getDocs(collection(db, "homes"));
+        const updatedHomes = updatedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const refreshedHome = updatedHomes.find(home => home.id === selectedHome.id);
+        setSelectedHome(refreshedHome);
+        setHomes(updatedHomes);
+      }
+    } catch (error) {
+      console.error("Error deleting note:", error);
     }
   };
 
@@ -205,26 +224,20 @@ const TrackerPage = () => {
           <button onClick={() => setSelectedHome(null)}>✖</button>
 
           <h2>🏡 {selectedHome.address}</h2>
-          <p><strong>Logged On:</strong> {selectedHome.timestamp}</p>
 
-          <label>Status:</label>
-          <select 
-            value={selectedHome.status} 
-            onChange={(e) => setSelectedHome({ ...selectedHome, status: e.target.value })}
-            style={{ width: "100%", color: "black", marginBottom: "10px" }}
-          >
-            <option value="">Select Status...</option>
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
+          <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Enter a note..." 
+            style={{ color: "black", width: "100%", padding: "8px", marginBottom: "10px" }} />
 
-          <button onClick={handleSaveHomeInfo} 
-            style={{ width: "100%", backgroundColor: "green", color: "white", padding: "12px" }}>
-            💾 Save & Close
-          </button>
+          <button onClick={handleAddNote}>➕ Add Note</button>
 
-          <button onClick={handleAddNote} style={{ width: "100%", backgroundColor: "blue", color: "white", padding: "8px" }}>➕ Add Note</button>
+          {selectedHome.notes.map((note, index) => (
+            <div key={index}>
+              <p>{note.timestamp} - {note.text}</p>
+              <button onClick={() => handleDeleteNote(index)}>🗑 Delete</button>
+            </div>
+          ))}
+
+          <button onClick={handleSaveHomeInfo}>💾 Save & Close</button>
         </div>
       )}
     </div>
