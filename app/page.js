@@ -1,28 +1,58 @@
-// For pages router (pages/index.js) or app router (app/page.js)
+/// app/page.js (if you're using Next.js 13's app directory)
 
 import Link from 'next/link';
 
 export default function HomePage() {
   return (
-    <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <h1>Welcome to the Door Knocking Tracker</h1>
-      <p>
-        Manage your door knocking activities effortlessly. Track your visits,
-        record notes, and update statuses all in one place.
-      </p>
-      <Link href="/tracker">
-        <a style={{
-          display: 'inline-block',
-          marginTop: '1rem',
-          padding: '0.5rem 1rem',
-          backgroundColor: '#0070f3',
-          color: '#fff',
-          borderRadius: '5px',
-          textDecoration: 'none'
-        }}>
-          Go to Tracker
-        </a>
-      </Link>
+    <div className="container">
+      <div className="hero">
+        <h1>Welcome to Door Knocking Tracker</h1>
+        <p>
+          Streamline your door knocking workflow with our all-in-one tracking solution.
+        </p>
+        <Link href="/tracker">
+          <a className="btn">Go to Tracker</a>
+        </Link>
+      </div>
+      <style jsx>{`
+        .container {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #74abe2, #5563de);
+          padding: 2rem;
+          color: #fff;
+        }
+        .hero {
+          text-align: center;
+          max-width: 600px;
+        }
+        .hero h1 {
+          font-size: 3rem;
+          margin-bottom: 1rem;
+          font-weight: bold;
+        }
+        .hero p {
+          font-size: 1.5rem;
+          margin-bottom: 2rem;
+        }
+        .btn {
+          display: inline-block;
+          padding: 0.75rem 1.5rem;
+          background-color: #ff4081;
+          color: #fff;
+          border: none;
+          border-radius: 5px;
+          font-size: 1.25rem;
+          cursor: pointer;
+          text-decoration: none;
+          transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+          background-color: #e73370;
+        }
+      `}</style>
     </div>
   );
 }
