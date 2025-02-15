@@ -1,5 +1,3 @@
-/* app/globals.css */
-
 :root {
   --primary-color: #ff4081;
   --primary-color-hover: #e73370;
@@ -25,4 +23,23 @@ a {
 
 * {
   box-sizing: border-box;
+}
+
+/* Global styles for inputs, labels, and buttons */
+input[type="text"] {
+  padding: 0.4rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 100%;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+button {
+  margin-top: 0.5rem;
 }
