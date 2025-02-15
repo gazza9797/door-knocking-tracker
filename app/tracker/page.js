@@ -230,8 +230,6 @@ const TrackerPage = () => {
           </select>
 
           <button onClick={handleSaveAndClose} style={{ backgroundColor: "green", color: "white", width: "100%", padding: "10px" }}>💾 Save & Close</button>
-
-          <button onClick={handleDeleteHomeEntry} style={{ backgroundColor: "red", color: "white", width: "100%", padding: "10px", marginTop: "5px" }}>🗑 Delete Entry</button>
         </div>
       )}
     </div>
