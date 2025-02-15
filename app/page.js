@@ -1,27 +1,25 @@
 "use client";
 
-import Link from 'next/link';
-import MyComponent from "../components/MyComponent";
+import Link from "next/link";
+import MyComponent from "@/components/MyComponent"; // ✅ Corrected Import Path
 
 export default function HomePage() {
   return (
     <div className="container">
       <div className="hero">
         <h1>Welcome to Door Knocking Tracker</h1>
-        <p>
-          Streamline your door knocking workflow with our all-in-one tracking solution.
-        </p>
+        <p>Streamline your door knocking workflow with our all-in-one tracking solution.</p>
+        
         <div className="links">
-          <Link href="/tracker">
-            <a className="btn">Go to Tracker</a>
-          </Link>
-          <Link href="/entries">
-            <a className="btn secondary">View Entries</a>
-          </Link>
+          {/* ✅ Fix: No extra <a> inside Link */}
+          <Link href="/tracker" className="btn">🏡 Go to Tracker</Link>
+          <Link href="/entries" className="btn secondary">📋 View Entries</Link>
         </div>
-        {/* Insert the component here */}
+
+        {/* MyComponent inserted */}
         <MyComponent showCount={true} />
       </div>
+
       <style jsx>{`
         .container {
           min-height: 100vh;
