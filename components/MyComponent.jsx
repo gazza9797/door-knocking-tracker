@@ -1,13 +1,11 @@
-import React, { useState } from "react";
+"use client";
 
-function MyComponent(props) {
-  console.log("MyComponent rendered with props:", props);
-  const [count, setCount] = useState(0);
-
-  if (props.showCount) {
-    return <div>Count: {count}</div>;
-  }
-  return <div>No count</div>;
+export default function MyComponent({ showCount }) {
+  return (
+    <div>
+      <p style={{ color: "white" }}>
+        {showCount ? "Component is loaded!" : ""}
+      </p>
+    </div>
+  );
 }
-
-export default MyComponent;
