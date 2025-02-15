@@ -1,17 +1,15 @@
 // app/layout.tsx
 import "./globals.css";
-import ProtectedRoute from "../components/ProtectedRoute";
+import dynamic from "next/dynamic";
+
+const ProtectedRoute = dynamic(() => import("../components/ProtectedRoute"), { ssr: false });
 
 export const metadata = {
   title: "Door Knocking Tracker",
   description: "Your all-in-one door knocking tracking solution",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
