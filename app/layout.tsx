@@ -1,5 +1,7 @@
-// app/layout.tsx
+"use client";
+
 import "./globals.css";
+import ProtectedRoute from "../components/ProtectedRoute";
 
 export const metadata = {
   title: "Door Knocking Tracker",
@@ -13,7 +15,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ProtectedRoute>{children}</ProtectedRoute>
+      </body>
     </html>
   );
 }
