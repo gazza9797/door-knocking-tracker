@@ -109,7 +109,7 @@ const TrackerPage = () => {
           : [...prevHomes, updatedHome]
       );
 
-      setSelectedHome(null); // ✅ CLOSE POPUP AFTER SAVING
+      setSelectedHome(null);
     } catch (error) {
       console.error("Error saving homeowner info:", error);
     }
@@ -125,6 +125,27 @@ const TrackerPage = () => {
       setSelectedHome(null);
     } catch (error) {
       console.error("Error deleting home entry:", error);
+    }
+  };
+
+  const handleDeleteNote = async (index) => {
+    if (!selectedHome) return;
+
+    try {
+      const updatedNotes = [...selectedHome.notes];
+      updatedNotes.splice(index, 1);
+
+      const homeRef = doc(db, "homes", selectedHome.id);
+      await setDoc(homeRef, { ...selectedHome, notes: updatedNotes }, { merge: true });
+
+      setSelectedHome((prev) => ({ ...prev, notes: updatedNotes }));
+      setHomes((prevHomes) =>
+        prevHomes.map((home) =>
+          home.id === selectedHome.id ? { ...home, notes: updatedNotes } : home
+        )
+      );
+    } catch (error) {
+      console.error("Error deleting note:", error);
     }
   };
 
@@ -188,41 +209,17 @@ const TrackerPage = () => {
 
           <h2>🏡 {selectedHome.address}</h2>
 
-          <label>Status:</label>
-          <select value={selectedHome.status} onChange={(e) => setSelectedHome({ ...selectedHome, status: e.target.value })} style={{ width: "100%", color: "black" }}>
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
+          <h3>Notes:</h3>
+          <ul>
+            {selectedHome.notes.map((note, index) => (
+              <li key={index} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>{note.text}</span>
+                <button onClick={() => handleDeleteNote(index)} style={{ color: "red", fontSize: "12px" }}>🗑️</button>
+              </li>
             ))}
-          </select>
+          </ul>
 
-          <label>Notes:</label>
-          <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} style={{ color: "black", width: "100%" }} />
-
-          {/* Big Green Save & Close Button */}
-          <button onClick={handleSaveHomeInfo} style={{
-            width: "100%",
-            marginTop: "10px",
-            backgroundColor: "green",
-            color: "white",
-            fontSize: "18px",
-            padding: "12px",
-            borderRadius: "5px",
-          }}>
-            💾 Save & Close
-          </button>
-
-          {/* Small Red Delete Button */}
-          <button onClick={handleDeleteHome} style={{
-            marginTop: "10px",
-            backgroundColor: "red",
-            color: "white",
-            fontSize: "12px",
-            padding: "5px 10px",
-            borderRadius: "5px",
-            display: "block",
-          }}>
-            🗑️ Delete
-          </button>
+          <button onClick={handleSaveHomeInfo} style={{ width: "100%", backgroundColor: "green", color: "white", padding: "12px" }}>💾 Save & Close</button>
         </div>
       )}
     </div>
