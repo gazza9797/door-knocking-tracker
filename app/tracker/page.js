@@ -109,7 +109,7 @@ const TrackerPage = () => {
           : [...prevHomes, updatedHome]
       );
 
-      setSelectedHome(updatedHome);
+      setSelectedHome(null); // ✅ CLOSE POPUP AFTER SAVING
     } catch (error) {
       console.error("Error saving homeowner info:", error);
     }
