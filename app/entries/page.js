@@ -1,9 +1,148 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
 import styles from "./EntriesPage.module.css";
+
+function EntryCard({ entry, onUpdate }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedEntry, setEditedEntry] = useState(entry);
+
+  // When the entry prop changes, update the local edited copy.
+  useEffect(() => {
+    setEditedEntry(entry);
+  }, [entry]);
+
+  const handleSave = async () => {
+    // Call onUpdate with the updated entry.
+    await onUpdate(editedEntry);
+    setIsEditing(false);
+  };
+
+  return (
+    <li className={styles.entryCard}>
+      {isEditing ? (
+        <div>
+          <label>
+            Address:
+            <input
+              type="text"
+              value={editedEntry.address}
+              onChange={(e) =>
+                setEditedEntry({ ...editedEntry, address: e.target.value })
+              }
+              style={{ width: "100%" }}
+            />
+          </label>
+          <label>
+            Status:
+            <input
+              type="text"
+              value={editedEntry.status}
+              onChange={(e) =>
+                setEditedEntry({ ...editedEntry, status: e.target.value })
+              }
+              style={{ width: "100%" }}
+            />
+          </label>
+          <label>
+            Homeowner:
+            <input
+              type="text"
+              value={editedEntry.homeownerName}
+              onChange={(e) =>
+                setEditedEntry({ ...editedEntry, homeownerName: e.target.value })
+              }
+              style={{ width: "100%" }}
+            />
+          </label>
+          <label>
+            Phone:
+            <input
+              type="text"
+              value={editedEntry.phoneNumber}
+              onChange={(e) =>
+                setEditedEntry({ ...editedEntry, phoneNumber: e.target.value })
+              }
+              style={{ width: "100%" }}
+            />
+          </label>
+          <label>
+            Email:
+            <input
+              type="text"
+              value={editedEntry.email}
+              onChange={(e) =>
+                setEditedEntry({ ...editedEntry, email: e.target.value })
+              }
+              style={{ width: "100%" }}
+            />
+          </label>
+          <p>
+            <strong>Created At:</strong>{" "}
+            {editedEntry.createdAt
+              ? new Date(editedEntry.createdAt).toLocaleString()
+              : "Not set"}
+          </p>
+          <div style={{ marginTop: "0.5rem" }}>
+            <button onClick={handleSave} className={styles.btn}>
+              Save
+            </button>
+            <button
+              onClick={() => setIsEditing(false)}
+              className={styles.btnSecondary}
+              style={{ marginLeft: "0.5rem" }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <h2>{entry.address}</h2>
+          <p>
+            <strong>Status:</strong> {entry.status || "N/A"}
+          </p>
+          <p>
+            <strong>Homeowner:</strong> {entry.homeownerName || "N/A"}
+          </p>
+          <p>
+            <strong>Phone:</strong> {entry.phoneNumber || "N/A"}
+          </p>
+          <p>
+            <strong>Email:</strong> {entry.email || "N/A"}
+          </p>
+          <p>
+            <strong>Created At:</strong>{" "}
+            {entry.createdAt ? new Date(entry.createdAt).toLocaleString() : "N/A"}
+          </p>
+          <div>
+            <strong>Notes:</strong>
+            {entry.notes && entry.notes.length > 0 ? (
+              <ul>
+                {entry.notes.map((note, index) => (
+                  <li key={index}>
+                    <small>{note.timestamp}:</small> {note.text}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No notes available.</p>
+            )}
+          </div>
+          <button
+            onClick={() => setIsEditing(true)}
+            className={styles.btn}
+            style={{ marginTop: "0.5rem" }}
+          >
+            Edit
+          </button>
+        </div>
+      )}
+    </li>
+  );
+}
 
 export default function EntriesPage() {
   const [entries, setEntries] = useState([]);
@@ -15,7 +154,10 @@ export default function EntriesPage() {
     const fetchEntries = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "homes"));
-        const data = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const data = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
         setEntries(data);
       } catch (error) {
         console.error("Error fetching entries:", error);
@@ -27,18 +169,35 @@ export default function EntriesPage() {
     fetchEntries();
   }, []);
 
-  // Filter entries based on the search term
+  // Update handler to update a single entry in Firestore and local state.
+  const handleUpdateEntry = async (updatedEntry) => {
+    try {
+      const homeRef = doc(db, "homes", updatedEntry.id);
+      await setDoc(homeRef, updatedEntry, { merge: true });
+      setEntries((prev) =>
+        prev.map((entry) =>
+          entry.id === updatedEntry.id ? updatedEntry : entry
+        )
+      );
+    } catch (error) {
+      console.error("Error updating entry:", error);
+    }
+  };
+
+  // Filter entries based on search term.
   const filteredEntries = useMemo(() => {
     const term = searchTerm.toLowerCase();
     return entries.filter((entry) => {
       return (
-        (entry.address && entry.address.toLowerCase().includes(term)) ||
-        (entry.homeownerName && entry.homeownerName.toLowerCase().includes(term))
+        (entry.address &&
+          entry.address.toLowerCase().includes(term)) ||
+        (entry.homeownerName &&
+          entry.homeownerName.toLowerCase().includes(term))
       );
     });
   }, [entries, searchTerm]);
 
-  // Sort the filtered entries based on the sort option
+  // Sort the filtered entries.
   const sortedEntries = useMemo(() => {
     const entriesCopy = [...filteredEntries];
     return entriesCopy.sort((a, b) => {
@@ -82,35 +241,11 @@ export default function EntriesPage() {
         ) : (
           <ul className={styles.entriesList}>
             {sortedEntries.map((entry) => (
-              <li key={entry.id} className={styles.entryCard}>
-                <h2>{entry.address}</h2>
-                <p>
-                  <strong>Status:</strong> {entry.status || "N/A"}
-                </p>
-                <p>
-                  <strong>Homeowner:</strong> {entry.homeownerName || "N/A"}
-                </p>
-                <p>
-                  <strong>Phone:</strong> {entry.phoneNumber || "N/A"}
-                </p>
-                <p>
-                  <strong>Email:</strong> {entry.email || "N/A"}
-                </p>
-                <div className={styles.entryNotes}>
-                  <strong>Notes:</strong>
-                  {entry.notes && entry.notes.length > 0 ? (
-                    <ul>
-                      {entry.notes.map((note, index) => (
-                        <li key={index}>
-                          <small>{note.timestamp}:</small> {note.text}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>No notes available.</p>
-                  )}
-                </div>
-              </li>
+              <EntryCard
+                key={entry.id}
+                entry={entry}
+                onUpdate={handleUpdateEntry}
+              />
             ))}
           </ul>
         )}
