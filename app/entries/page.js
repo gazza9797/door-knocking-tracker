@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, deleteDoc, addDoc } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
 import Link from "next/link";
 import styles from "./EntriesPage.module.css";
 
-// Status options array (as used on the tracker page)
+// Status options (as used on the tracker page)
 const statusOptions = [
   { label: "✅ Answered", value: "Answered" },
   { label: "📞 Call Back", value: "Call Back" },
@@ -20,7 +20,7 @@ function EntryCard({ entry, onDelete, onUpdate }) {
   const [editedEntry, setEditedEntry] = useState(entry);
   const [newNote, setNewNote] = useState("");
 
-  // Keep local state in sync if entry prop changes.
+  // Keep the local copy in sync when the entry prop updates.
   useEffect(() => {
     setEditedEntry(entry);
   }, [entry]);
@@ -30,7 +30,7 @@ function EntryCard({ entry, onDelete, onUpdate }) {
     setIsEditing(false);
   };
 
-  // Add a note with a timestamp to the entry.
+  // Handler to add a note with the current timestamp.
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
     const timestamp = new Date().toLocaleString();
@@ -40,7 +40,7 @@ function EntryCard({ entry, onDelete, onUpdate }) {
     setNewNote("");
   };
 
-  // Delete a note from the entry.
+  // Handler to delete a note.
   const handleDeleteNote = async (noteIndex) => {
     const updatedNotes = entry.notes.filter((_, i) => i !== noteIndex);
     const updatedEntry = { ...entry, notes: updatedNotes };
@@ -222,7 +222,10 @@ export default function EntriesPage() {
     const fetchEntries = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "homes"));
-        const data = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const data = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
         setEntries(data);
       } catch (error) {
         console.error("Error fetching entries:", error);
@@ -239,7 +242,9 @@ export default function EntriesPage() {
       const homeRef = doc(db, "homes", updatedEntry.id);
       await setDoc(homeRef, updatedEntry, { merge: true });
       setEntries((prev) =>
-        prev.map((entry) => (entry.id === updatedEntry.id ? updatedEntry : entry))
+        prev.map((entry) =>
+          entry.id === updatedEntry.id ? updatedEntry : entry
+        )
       );
     } catch (error) {
       console.error("Error updating entry:", error);
@@ -260,8 +265,10 @@ export default function EntriesPage() {
     const term = searchTerm.toLowerCase();
     return entries.filter((entry) => {
       return (
-        (entry.address && entry.address.toLowerCase().includes(term)) ||
-        (entry.homeownerName && entry.homeownerName.toLowerCase().includes(term))
+        (entry.address &&
+          entry.address.toLowerCase().includes(term)) ||
+        (entry.homeownerName &&
+          entry.homeownerName.toLowerCase().includes(term))
       );
     });
   }, [entries, searchTerm]);
