@@ -11,9 +11,13 @@ export default function HomePage() {
         <p>Streamline your door knocking workflow with our all-in-one tracking solution.</p>
         
         <div className="links">
-          {/* ✅ Fix: No extra <a> inside Link */}
-          <Link href="/tracker" className="btn">🏡 Go to Tracker</Link>
-          <Link href="/entries" className="btn secondary">📋 View Entries</Link>
+          {/* ✅ Buttons properly styled and linked */}
+          <Link href="/tracker">
+            <button className="btn">🏡 Go to Tracker</button>
+          </Link>
+          <Link href="/entries">
+            <button className="btn secondary">📋 View Entries</button>
+          </Link>
         </div>
 
         {/* MyComponent inserted */}
