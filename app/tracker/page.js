@@ -124,18 +124,24 @@ const TrackerPage = () => {
       const timestamp = new Date().toLocaleString();
       const updatedNotes = [...(selectedHome.notes || []), { text: newNote, timestamp }];
 
+      let updatedHome = { ...selectedHome, notes: updatedNotes };
+
       if (selectedHome.id) {
         const homeRef = doc(db, "homes", selectedHome.id);
-        await setDoc(homeRef, { ...selectedHome, notes: updatedNotes }, { merge: true });
-
-        setSelectedHome((prev) => ({ ...prev, notes: updatedNotes }));
-        setHomes((prevHomes) =>
-          prevHomes.map((home) =>
-            home.id === selectedHome.id ? { ...home, notes: updatedNotes } : home
-          )
-        );
+        await setDoc(homeRef, updatedHome, { merge: true });
+      } else {
+        const docRef = await addDoc(collection(db, "homes"), updatedHome);
+        updatedHome.id = docRef.id;
       }
-      setNewNote(""); // Clear input after saving
+
+      setHomes((prevHomes) =>
+        prevHomes.some(home => home.id === updatedHome.id)
+          ? prevHomes.map(home => (home.id === updatedHome.id ? updatedHome : home))
+          : [...prevHomes, updatedHome]
+      );
+
+      setSelectedHome(updatedHome); // Refresh UI with updated notes
+      setNewNote(""); // Clear input field after saving
     } catch (error) {
       console.error("Error adding note:", error);
     }
@@ -201,18 +207,6 @@ const TrackerPage = () => {
 
           <h2>🏡 {selectedHome.address}</h2>
           <p><strong>Logged On:</strong> {selectedHome.timestamp}</p> 
-
-          <label>Status:</label>
-          <select 
-            value={selectedHome.status} 
-            onChange={(e) => setSelectedHome({ ...selectedHome, status: e.target.value })}
-            style={{ width: "100%", color: "black", marginBottom: "10px" }}
-          >
-            <option value="">Select Status...</option>
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
 
           <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Enter a note..." 
             style={{ color: "black", width: "100%", padding: "8px", marginBottom: "10px" }} />
