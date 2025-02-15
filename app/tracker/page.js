@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, OverlayView } from "@react-google-maps/api";
-import { db } from "@/firebaseConfig";
+import { collection, doc, setDoc, getDocs, addDoc, deleteDoc } from "firebase/firestore";
+import { db } from "@/firebaseConfig";  // ✅ Correct Firebase Import
 
 const mapContainerStyle = {
   width: "100%",
@@ -88,7 +89,20 @@ const TrackerPage = () => {
     });
   };
 
- 
+  const handleSaveHomeInfo = async () => {
+    if (!selectedHome) return;
+
+    try {
+      let updatedHome = { ...selectedHome };
+
+      if (selectedHome.id) {
+        const homeRef = doc(db, "homes", selectedHome.id);
+        await setDoc(homeRef, updatedHome, { merge: true });
+      } else {
+        const docRef = await addDoc(collection(db, "homes"), updatedHome);
+        updatedHome.id = docRef.id;
+      }
+
       setHomes((prevHomes) =>
         prevHomes.some(home => home.id === updatedHome.id)
           ? prevHomes.map(home => (home.id === updatedHome.id ? updatedHome : home))
@@ -98,32 +112,6 @@ const TrackerPage = () => {
       setSelectedHome(updatedHome);
     } catch (error) {
       console.error("Error saving homeowner info:", error);
-    }
-  };
-
-  const handleSaveNotes = async () => {
-    if (!selectedHome || !newNote.trim()) return;
-
-    try {
-      const timestamp = new Date().toLocaleString();
-      const updatedNotes = [...(selectedHome.notes || [])];
-      updatedNotes.unshift({ text: newNote, timestamp });
-
-      if (selectedHome.id) {
-        const homeRef = doc(db, "homes", selectedHome.id);
-        await setDoc(homeRef, { ...selectedHome, notes: updatedNotes }, { merge: true });
-      }
-
-      setHomes((prevHomes) =>
-        prevHomes.map((home) =>
-          home.id === selectedHome.id ? { ...home, notes: updatedNotes } : home
-        )
-      );
-
-      setSelectedHome((prev) => ({ ...prev, notes: updatedNotes }));
-      setNewNote("");
-    } catch (error) {
-      console.error("Error saving note:", error);
     }
   };
 
@@ -196,15 +184,7 @@ const TrackerPage = () => {
 
           <label>Notes:</label>
           <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} style={{ color: "black", width: "100%" }} />
-          <button onClick={handleSaveNotes} style={{ width: "100%" }}>💾 Save Note</button>
-
-          <h3>📜 Previous Notes:</h3>
-          {selectedHome.notes.map((note, index) => (
-            <div key={index} style={{ padding: "5px", borderBottom: "1px solid #ccc" }}>
-              <strong>{note.timestamp}</strong>
-              <p>{note.text}</p>
-            </div>
-          ))}
+          <button onClick={handleSaveHomeInfo} style={{ width: "100%" }}>💾 Save Home Info</button>
         </div>
       )}
     </div>
