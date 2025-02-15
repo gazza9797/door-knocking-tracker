@@ -198,9 +198,31 @@ const TrackerPage = () => {
           <label>Notes:</label>
           <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} style={{ color: "black", width: "100%" }} />
 
-          {/* Buttons for Save & Close and Delete */}
-          <button onClick={handleSaveHomeInfo} style={{ width: "100%", marginTop: "10px" }}>💾 Save & Close</button>
-          <button onClick={handleDeleteHome} style={{ width: "100%", marginTop: "10px", backgroundColor: "red", color: "white" }}>🗑️ Delete</button>
+          {/* Big Green Save & Close Button */}
+          <button onClick={handleSaveHomeInfo} style={{
+            width: "100%",
+            marginTop: "10px",
+            backgroundColor: "green",
+            color: "white",
+            fontSize: "18px",
+            padding: "12px",
+            borderRadius: "5px",
+          }}>
+            💾 Save & Close
+          </button>
+
+          {/* Small Red Delete Button */}
+          <button onClick={handleDeleteHome} style={{
+            marginTop: "10px",
+            backgroundColor: "red",
+            color: "white",
+            fontSize: "12px",
+            padding: "5px 10px",
+            borderRadius: "5px",
+            display: "block",
+          }}>
+            🗑️ Delete
+          </button>
         </div>
       )}
     </div>
