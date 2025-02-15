@@ -6,7 +6,7 @@ import { db } from "../../firebaseConfig";
 import Link from "next/link";
 import styles from "./EntriesPage.module.css";
 
-// Status options array (same as on the tracker page)
+// Status options array (as used on the tracker page)
 const statusOptions = [
   { label: "✅ Answered", value: "Answered" },
   { label: "📞 Call Back", value: "Call Back" },
@@ -20,7 +20,7 @@ function EntryCard({ entry, onDelete, onUpdate }) {
   const [editedEntry, setEditedEntry] = useState(entry);
   const [newNote, setNewNote] = useState("");
 
-  // Update local state when entry prop changes.
+  // Keep local state in sync if entry prop changes.
   useEffect(() => {
     setEditedEntry(entry);
   }, [entry]);
@@ -30,7 +30,7 @@ function EntryCard({ entry, onDelete, onUpdate }) {
     setIsEditing(false);
   };
 
-  // Add a note to the entry.
+  // Add a note with a timestamp to the entry.
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
     const timestamp = new Date().toLocaleString();
@@ -40,7 +40,7 @@ function EntryCard({ entry, onDelete, onUpdate }) {
     setNewNote("");
   };
 
-  // Delete note handler is provided from parent.
+  // Delete a note from the entry.
   const handleDeleteNote = async (noteIndex) => {
     const updatedNotes = entry.notes.filter((_, i) => i !== noteIndex);
     const updatedEntry = { ...entry, notes: updatedNotes };
@@ -171,7 +171,6 @@ function EntryCard({ entry, onDelete, onUpdate }) {
               <p>No notes available.</p>
             )}
           </div>
-          {/* Add note section */}
           <div style={{ marginTop: "0.5rem" }}>
             <input
               type="text"
@@ -180,7 +179,11 @@ function EntryCard({ entry, onDelete, onUpdate }) {
               onChange={(e) => setNewNote(e.target.value)}
               style={{ width: "100%" }}
             />
-            <button onClick={handleAddNote} className={styles.btn} style={{ marginTop: "0.5rem" }}>
+            <button
+              onClick={handleAddNote}
+              className={styles.btn}
+              style={{ marginTop: "0.5rem" }}
+            >
               Add Note
             </button>
           </div>
@@ -199,8 +202,8 @@ function EntryCard({ entry, onDelete, onUpdate }) {
             >
               Delete
             </button>
-            <Link href={`/tracker?lat=${entry.lat}&lng=${entry.lng}`}>
-              <a className={styles.btn}>Map Address</a>
+            <Link href={`/tracker?lat=${entry.lat}&lng=${entry.lng}&zoom=16`}>
+              <a className={styles.btn}>Map It</a>
             </Link>
           </div>
         </div>
@@ -213,16 +216,13 @@ export default function EntriesPage() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortOption, setSortOption] = useState("address"); // Default sort
+  const [sortOption, setSortOption] = useState("address");
 
   useEffect(() => {
     const fetchEntries = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "homes"));
-        const data = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const data = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         setEntries(data);
       } catch (error) {
         console.error("Error fetching entries:", error);
@@ -234,22 +234,18 @@ export default function EntriesPage() {
     fetchEntries();
   }, []);
 
-  // Handler to update an entry.
   const handleUpdateEntry = async (updatedEntry) => {
     try {
       const homeRef = doc(db, "homes", updatedEntry.id);
       await setDoc(homeRef, updatedEntry, { merge: true });
       setEntries((prev) =>
-        prev.map((entry) =>
-          entry.id === updatedEntry.id ? updatedEntry : entry
-        )
+        prev.map((entry) => (entry.id === updatedEntry.id ? updatedEntry : entry))
       );
     } catch (error) {
       console.error("Error updating entry:", error);
     }
   };
 
-  // Handler to delete an entry.
   const handleDeleteEntry = async (entryId) => {
     try {
       const entryRef = doc(db, "homes", entryId);
@@ -264,10 +260,8 @@ export default function EntriesPage() {
     const term = searchTerm.toLowerCase();
     return entries.filter((entry) => {
       return (
-        (entry.address &&
-          entry.address.toLowerCase().includes(term)) ||
-        (entry.homeownerName &&
-          entry.homeownerName.toLowerCase().includes(term))
+        (entry.address && entry.address.toLowerCase().includes(term)) ||
+        (entry.homeownerName && entry.homeownerName.toLowerCase().includes(term))
       );
     });
   }, [entries, searchTerm]);
