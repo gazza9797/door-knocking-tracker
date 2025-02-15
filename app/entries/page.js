@@ -1,16 +1,25 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { collection, getDocs, doc, deleteDoc, setDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
 import Link from "next/link";
 import styles from "./EntriesPage.module.css";
+
+// Status options array (same as on the tracking map page)
+const statusOptions = [
+  { label: "✅ Answered", value: "Answered" },
+  { label: "📞 Call Back", value: "Call Back" },
+  { label: "❌ Not Interested", value: "Not Interested" },
+  { label: "🏠 Not Home", value: "Not Home" },
+  { label: "🚧 Inaccessible", value: "Inaccessible" },
+];
 
 function EntryCard({ entry, onDelete, onUpdate }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedEntry, setEditedEntry] = useState(entry);
 
-  // Update local state when entry prop changes.
+  // Update local edited copy if entry prop changes.
   useEffect(() => {
     setEditedEntry(entry);
   }, [entry]);
@@ -37,14 +46,20 @@ function EntryCard({ entry, onDelete, onUpdate }) {
           </label>
           <label>
             Status:
-            <input
-              type="text"
+            <select
               value={editedEntry.status}
               onChange={(e) =>
                 setEditedEntry({ ...editedEntry, status: e.target.value })
               }
               style={{ width: "100%" }}
-            />
+            >
+              <option value="">Select a status...</option>
+              {statusOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </label>
           <label>
             Homeowner:
@@ -181,7 +196,7 @@ export default function EntriesPage() {
     fetchEntries();
   }, []);
 
-  // Handler to update an entry from editing
+  // Handler to update an entry
   const handleUpdateEntry = async (updatedEntry) => {
     try {
       const homeRef = doc(db, "homes", updatedEntry.id);
@@ -196,7 +211,7 @@ export default function EntriesPage() {
     }
   };
 
-  // Handler to delete an entry.
+  // Handler to delete an entry
   const handleDeleteEntry = async (entryId) => {
     try {
       const entryRef = doc(db, "homes", entryId);
@@ -211,8 +226,10 @@ export default function EntriesPage() {
     const term = searchTerm.toLowerCase();
     return entries.filter((entry) => {
       return (
-        (entry.address && entry.address.toLowerCase().includes(term)) ||
-        (entry.homeownerName && entry.homeownerName.toLowerCase().includes(term))
+        (entry.address &&
+          entry.address.toLowerCase().includes(term)) ||
+        (entry.homeownerName &&
+          entry.homeownerName.toLowerCase().includes(term))
       );
     });
   }, [entries, searchTerm]);
